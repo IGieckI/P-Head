@@ -41,6 +41,14 @@ def generate_launch_description():
             ]
         ),
 
+        # --- Robot Master Controller ---
+        Node(
+            package='master',
+            executable='robot_controller',
+            name='robot_master_controller',
+            output='screen'
+        ),
+
         # Connection to the Micro-ROS Agent
         # If connected with USB cable: 'udp4' -> 'serial' and '--port 8888' -> '--port /dev/ttyUSB0'
         ExecuteProcess(
