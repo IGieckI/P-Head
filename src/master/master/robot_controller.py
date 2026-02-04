@@ -3,7 +3,7 @@ from rclpy.node import Node
 
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Image
-from std_msgs.msg import String
+from std_msgs.msg import String, Int16MultiArray
 from cv_bridge import CvBridge
 
 import cv2
@@ -14,18 +14,19 @@ class RobotMasterController(Node):
         super().__init__('robot_master_controller')
 
         # Publisher topic the ESP32 will listen to for movement commands
-        self.cmd_vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.cmd_vel_pub = self.create_publisher(Twist, '/movement_out', 10)
         
         # Publisher for speech output (Text-to-Speech)
-        self.speech_pub = self.create_publisher(String, '/robot/speech_out', 10)
+        self.speech_pub = self.create_publisher(String, '/robot/sound_out', 10)
 
         # Listener to the camera drivers
-        self.create_subscription(Image, '/camera_cam1/image_raw', self.cam1_callback, 10)
-        self.create_subscription(Image, '/camera_cam2/image_raw', self.cam2_callback, 10)
+        self.create_subscription(Image, '/cam1/image_raw', self.cam1_callback, 10)
+        self.create_subscription(Image, '/cam2/image_raw', self.cam2_callback, 10)
         
-        # Listener for incoming voice text (Speech-to-Text)
-        self.create_subscription(String, '/robot/voice_in', self.voice_callback, 10)
-
+        # Listener for incoming voice text
+        self.create_subscription(String, '/robot/sound_in', self.voice_callback, 10)
+        # Audio Bridge listener
+        self.create_subscription(Int16MultiArray, '/robot/sound_in', self.audio_callback, 10)
         # Internal state
         self.bridge = CvBridge()
         self.latest_cam1_frame = None
@@ -52,8 +53,14 @@ class RobotMasterController(Node):
         self.get_logger().info(f"Heard voice command: {msg.data}")
         # TODO
 
-    def control_loop(self):        
-        # Example: Just print status if we have images
+    def audio_callback(self, msg):
+        # raw Int16 audio chunks from ESP32
+        data_len = len(msg.data)
+        if data_len > 0:
+            # TODO: Elaborate audio
+            self.get_logger().info(f"Received audio bridge data: {data_len} samples")
+
+    def control_loop(self):
         if self.latest_cam1_frame is not None:
             # Could perform some processing like face detection
             pass
